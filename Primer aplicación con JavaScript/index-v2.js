@@ -60,6 +60,14 @@ const reducer = (state, action) => {
       productos,
     };
   }
+
+  if (action.type == "producto-seleccionado") {
+    const codigo = action.payload.codigo;
+    return {
+      ...state,
+      producto: state.productos.find((item) => item.codigo == codigo) || {}
+    }
+  }
   return state;
 };
 const store = Redux.createStore(reducer, preloadedState);
@@ -71,9 +79,18 @@ store.subscribe(() => {
   if (currentState != latestState) {
     latestState = currentState;
     console.log("estado: ", store.getState());
+    renderForm(currentState.producto);
     renderTable(currentState.productos);
   }
 });
+
+function renderForm(producto) {
+  inputCodigo.value = producto.codigo || "";
+  inputNombre.value = producto.nombre || "";
+  inputCantidad.value = producto.cantidad || "";
+  inputPrecio.value = producto.precio || "";
+  selectCategoria.value = producto.categoria || 1;
+}
 
 function renderTable(productos) {
   const filas = productos.map((item) => {
@@ -103,6 +120,16 @@ function renderTable(productos) {
         },
       });
     });
+
+    editar.addEventListener("click", (event) => {
+      event.preventDefault();
+      store.dispatch({
+        type: "producto-seleccionado",
+        payload: {
+          codigo: item.codigo,
+        },
+      });
+    });
     return tr;
   });
   tbody.innerHTML = "";
@@ -118,6 +145,56 @@ function renderTable(productos) {
   function sum(elementos, selector) {
     return elementos.map(selector).reduce((a, b) => a + b, 0);
   }
+}
+
+form.addEventListener("submit", onSubmit);
+/**
+ * 
+ * @param {Event} event 
+ */
+function onSubmit(event) {
+  event.preventDefault();
+
+  const data = new FormData(form);
+  const values = Array.from(data.entries());
+
+  const [frmCodigo, frmNombre, frmCantidad, frmPrecio, frmCategoria] = values;
+
+  const codigo = parseInt(frmCodigo[1]);
+  const nombre = frmNombre[1];
+  const cantidad = parseInt(frmCantidad[1]);
+  const precio = parseFloat(frmPrecio[1]);
+  const categoria = parseInt(frmCategoria[1]);
+
+  if (codigo) {
+    store.dispatch({
+      type: "producto-modificado",
+      payload: {
+        codigo,
+        nombre,
+        cantidad,
+        precio,
+        categoria
+      }
+    });
+  } else {
+    store.dispatch({
+      type: "producto-agregado",
+      payload: {
+        nombre,
+        cantidad,
+        precio,
+        categoria
+      }
+    });
+  }
+
+  store.dispatch({
+    type: "producto-seleccionado",
+    payload: {
+      codigo: null
+    }
+  })
 }
 
 store.dispatch({
