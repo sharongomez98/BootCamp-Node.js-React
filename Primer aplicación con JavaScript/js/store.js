@@ -51,29 +51,52 @@ const reducer = (state, action) => {
 };
 
 const productoSeleccionado = (codigo) => ({
-    type: "producto-seleccionado",
-    payload: {codigo}
+  type: "producto-seleccionado",
+  payload: { codigo },
 });
 
 const productoAgregado = (payload) => ({
-    type: "producto-agregado",
-    payload,
+  type: "producto-agregado",
+  payload,
 });
 
 const productoModificado = (payload) => ({
-    type: "producto-modificado",
-    payload,
+  type: "producto-modificado",
+  payload,
 });
 
-const productoEliminado = (codigo) => ({
-    type: "producto-eliminado",
-    payload: {codigo}
+const productoEliminado = (payload) => ({
+  type: "producto-eliminado",
+  payload: { payload },
 });
 
-const productosStore =  {
-    reducer,
-    productoSeleccionado,
-    productoAgregado,
-    productoModificado,
-    productoEliminado,
-}
+//long version of log middleware
+
+// function loggerMiddleware(store) {
+//   return function dispatchWrapper(next) {
+//     return function actionHandler(action) {
+//       const state = store.getState();
+//       console.log("dispatching", action);
+//       console.log("state", state);
+
+//     }
+//   }
+// }
+
+
+//short version of log middleware
+
+const loggerMiddleware = (store) => (next) => (action) => {
+  console.log("dispatching", action);
+  const result = next(action);
+  console.log("next state", store.getState());
+  return result;
+};
+
+const productosStore = {
+  reducer,
+  productoSeleccionado,
+  productoAgregado,
+  productoModificado,
+  productoEliminado,
+};
