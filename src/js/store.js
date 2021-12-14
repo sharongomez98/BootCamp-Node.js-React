@@ -5,7 +5,8 @@ const ActionTypes = {
   ProductoSeleccionado: "producto-selecionado",
   ProductoAgregadoOModificado: "producto-agregado-o-modificado",
 };
-const reducer = (state, action) => {
+
+export const reducer = (state, action) => {
   switch (action.type) {
     case ActionTypes.ProductoAgregado: 
       return productoAgregadoReducer(state, action);
@@ -24,27 +25,27 @@ const reducer = (state, action) => {
   }
 };
 
-const productoSeleccionado = (codigo) => ({
+export const productoSeleccionado = (codigo) => ({
   type: ActionTypes.ProductoSeleccionado,
   payload: { codigo },
 });
 
-const productoAgregado = (payload) => ({
+export const productoAgregado = (payload) => ({
   type: ActionTypes.ProductoAgregado,
   payload,
 });
 
-const productoModificado = (payload) => ({
+export const productoModificado = (payload) => ({
   type: ActionTypes.ProductoModificado,
   payload,
 });
 
-const productoEliminado = (codigo) => ({
+export const productoEliminado = (codigo) => ({
   type: ActionTypes.ProductoEliminado,
   payload: { codigo },
 });
 
-const agregarOModificarProducto = (payload) => ({
+export const agregarOModificarProducto = (payload) => ({
   type: ActionTypes.ProductoAgregadoOModificado,
   payload,
 });
@@ -64,27 +65,27 @@ const agregarOModificarProducto = (payload) => ({
 
 //short version of log middleware
 
-const loggerMiddleware = (store) => (next) => (action) => {
+export const loggerMiddleware = (store) => (next) => (action) => {
   console.log("dispatching", action);
   const result = next(action);
   console.log("next state", store.getState());
   return result;
 };
 
-const agregarOModificarProductoMiddleware = (store) => (next) => (action) => {
+export const agregarOModificarProductoMiddleware = (store) => (next) => (action) => {
   if (action.type != ActionTypes.ProductoAgregadoOModificado) {
     return next(action);
   }
   const producto = action.payload;
 
   const actionToDispatch = producto.codigo
-    ? productosStore.productoModificado(producto)
-    : productosStore.productoAgregado(producto);
+    ? productoModificado(producto)
+    : productoAgregado(producto);
   store.dispatch(actionToDispatch);
-  return store.dispatch(productosStore.productoSeleccionado(null));
+  return store.dispatch(productoSeleccionado(null));
 };
 
-const generadorCodigoProductoMiddleware = (store) => (next) => (action) => {
+export const generadorCodigoProductoMiddleware = (store) => (next) => (action) => {
   if (action.type != ActionTypes.ProductoAgregado) {
     return next(action);
   }
@@ -137,7 +138,7 @@ function productoAgregadoReducer(state,action) {
   };
 }
 
-function generadorCodigoProductoBuilder(codigoInicial) {
+export function generadorCodigoProductoBuilder(codigoInicial) {
   let codigo = codigoInicial;
   return (store) => (next) => (action) => {
     if (action.type != ActionTypes.ProductoAgregado) {
@@ -155,10 +156,3 @@ function generadorCodigoProductoBuilder(codigoInicial) {
   };
 }
 
-const productosStore = {
-  reducer,
-  productoSeleccionado,
-  productoAgregado,
-  productoModificado,
-  productoEliminado,
-};
