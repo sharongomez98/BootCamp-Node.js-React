@@ -1,73 +1,52 @@
-let indice = 0;
+const ActionTypes = {
+  ProductoAgregado: "producto-agregado",
+  ProductoModificado: "producto-modificado",
+  ProductoEliminado: "producto-eliminado",
+  ProductoSeleccionado: "producto-selecionado",
+  ProductoAgregadoOModificado: "producto-agregado-o-modificado",
+};
 const reducer = (state, action) => {
-  if (action.type == "producto-agregado") {
-    indice++;
-    const producto = action.payload;
-    const codigo = indice;
-    const total = producto.cantidad * producto.precio;
-    return {
-      ...state,
-      productos: [
-        ...state.productos,
-        {
-          ...producto,
-          codigo,
-          total,
-        },
-      ],
-    };
-  }
-  if (action.type == "producto-modificado") {
-    const producto = action.payload;
-    const productos = state.productos.slice();
-    const codigo = producto.codigo;
-    const total = producto.cantidad * producto.precio;
-    const old = productos.find((item) => item.codigo == codigo);
-    const index = productos.indexOf(old);
-    productos[index] = { ...producto, total };
-    return {
-      ...state,
-      productos,
-    };
-  }
+  switch (action.type) {
+    case ActionTypes.ProductoAgregado: 
+      return productoAgregadoReducer(state, action);
 
-  if (action.type == "producto-eliminado") {
-    const codigo = action.payload.codigo;
-    const productos = state.productos.filter((item) => item.codigo != codigo);
-    return {
-      ...state,
-      productos,
-    };
-  }
+    case ActionTypes.ProductoModificado: 
+      return productoModificadoReducer(state, action);
 
-  if (action.type == "producto-seleccionado") {
-    const codigo = action.payload.codigo;
-    return {
-      ...state,
-      producto: state.productos.find((item) => item.codigo == codigo) || {},
-    };
+    case ActionTypes.ProductoEliminado: 
+      return productoEliminadoReducer(state, action);
+
+    case ActionTypes.ProductoSeleccionado: 
+      return productoSeleccionadoReducer(state, action);
+
+    default:
+      return state;
   }
-  return state;
 };
 
 const productoSeleccionado = (codigo) => ({
-  type: "producto-seleccionado",
+  type: ActionTypes.ProductoSeleccionado,
   payload: { codigo },
 });
 
 const productoAgregado = (payload) => ({
-  type: "producto-agregado",
+  type: ActionTypes.ProductoAgregado,
   payload,
 });
 
 const productoModificado = (payload) => ({
-  type: "producto-modificado",
+  type: ActionTypes.ProductoModificado,
   payload,
 });
 
-const productoEliminado = (payload) => ({
-  type: "producto-eliminado",
-  payload: { payload },
+const productoEliminado = (codigo) => ({
+  type: ActionTypes.ProductoEliminado,
+  payload: { codigo },
+});
+
+const agregarOModificarProducto = (payload) => ({
+  type: ActionTypes.ProductoAgregadoOModificado,
+  payload,
 });
 
 //long version of log middleware
@@ -83,7 +62,6 @@ const productoEliminado = (payload) => ({
 //   }
 // }
 
-
 //short version of log middleware
 
 const loggerMiddleware = (store) => (next) => (action) => {
@@ -92,6 +70,90 @@ const loggerMiddleware = (store) => (next) => (action) => {
   console.log("next state", store.getState());
   return result;
 };
+
+const agregarOModificarProductoMiddleware = (store) => (next) => (action) => {
+  if (action.type != ActionTypes.ProductoAgregadoOModificado) {
+    return next(action);
+  }
+  const producto = action.payload;
+
+  const actionToDispatch = producto.codigo
+    ? productosStore.productoModificado(producto)
+    : productosStore.productoAgregado(producto);
+  store.dispatch(actionToDispatch);
+  return store.dispatch(productosStore.productoSeleccionado(null));
+};
+
+const generadorCodigoProductoMiddleware = (store) => (next) => (action) => {
+  if (action.type != ActionTypes.ProductoAgregado) {
+    return next(action);
+  }
+  action.payload = { ...action.payload, codigo };
+};
+
+function productoSeleccionadoReducer(state, action) {
+  const codigo = action.payload.codigo;
+  return {
+    ...state,
+    producto: state.productos.find((item) => item.codigo == codigo) || {},
+  };
+}
+
+function productoEliminadoReducer(state, action) {
+  const codigo = action.payload.codigo;
+  const productos = state.productos.filter((item) => item.codigo != codigo);
+  return {
+    ...state,
+    productos,
+  };
+}
+
+function productoModificadoReducer(state, action) {
+  const producto = action.payload;
+  const productos = state.productos.slice();
+  const codigo = producto.codigo;
+  const total = producto.cantidad * producto.precio;
+  const old = productos.find((item) => item.codigo == codigo);
+  const index = productos.indexOf(old);
+  productos[index] = { ...producto, total };
+  return {
+    ...state,
+    productos,
+  };
+}
+
+function productoAgregadoReducer(state,action) {
+  const producto = action.payload;
+  const total = producto.cantidad * producto.precio;
+  return {
+    ...state,
+    productos: [
+      ...state.productos,
+      {
+        ...producto,
+        total,
+      },
+    ],
+  };
+}
+
+function generadorCodigoProductoBuilder(codigoInicial) {
+  let codigo = codigoInicial;
+  return (store) => (next) => (action) => {
+    if (action.type != ActionTypes.ProductoAgregado) {
+      return next(action);
+    }
+    codigo++;
+    const actionToDispatch = {
+      ...action,
+      payload: {
+        ...action.payload,
+        codigo,
+      },
+    };
+    return next(actionToDispatch);
+  };
+}
 
 const productosStore = {
   reducer,
