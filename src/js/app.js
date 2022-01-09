@@ -1,6 +1,5 @@
 import { applyMiddleware, createStore } from "redux";
-import { ui } from "./ui";
-import * as $store from "./store";
+import * as $store from "../store/store";
 
 const preloadedState = {
   producto: {},
@@ -15,23 +14,4 @@ const middlewares = applyMiddleware(
 
 const store = createStore($store.reducer, preloadedState, middlewares);
 
-store.subscribe(dispatchOnChange(store.getState, (state) => {
-  ui.renderForm(state.producto);
-  ui.renderTable(state.productos);
-}))
-
-ui.onFormSubmit = (producto) => store.dispatch($store.agregarOModificarProducto(producto));
-ui.onEliminarClick = (codigo) => store.dispatch($store.productoEliminado(codigo));
-ui.onEditarClick = (codigo) => store.dispatch($store.productoSeleccionado(codigo));
-
-function dispatchOnChange(getState, dispatch) {
-  let latestState;
-
-  return function () {
-    let currentState = getState();
-    if (currentState != latestState) {
-      latestState = currentState;
-      dispatch(currentState);
-    }
-  };
-}
+export default store;

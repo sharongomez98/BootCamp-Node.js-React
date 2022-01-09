@@ -8,16 +8,16 @@ const ActionTypes = {
 
 export const reducer = (state, action) => {
   switch (action.type) {
-    case ActionTypes.ProductoAgregado: 
+    case ActionTypes.ProductoAgregado:
       return productoAgregadoReducer(state, action);
 
-    case ActionTypes.ProductoModificado: 
+    case ActionTypes.ProductoModificado:
       return productoModificadoReducer(state, action);
 
-    case ActionTypes.ProductoEliminado: 
+    case ActionTypes.ProductoEliminado:
       return productoEliminadoReducer(state, action);
 
-    case ActionTypes.ProductoSeleccionado: 
+    case ActionTypes.ProductoSeleccionado:
       return productoSeleccionadoReducer(state, action);
 
     default:
@@ -72,25 +72,42 @@ export const loggerMiddleware = (store) => (next) => (action) => {
   return result;
 };
 
-export const agregarOModificarProductoMiddleware = (store) => (next) => (action) => {
-  if (action.type != ActionTypes.ProductoAgregadoOModificado) {
-    return next(action);
+export const storageMiddleware = (store) => (next) => (action) => {
+  const actions = [
+    ActionTypes.productoAgregado,
+    ActionTypes.productoModificado,
+    ActionTypes.productoEliminado
+  ];
+  const result = next(action);
+  if (actions.indexOf(action.type) < 0) {
+    return result;
   }
-  const producto = action.payload;
-
-  const actionToDispatch = producto.codigo
-    ? productoModificado(producto)
-    : productoAgregado(producto);
-  store.dispatch(actionToDispatch);
-  return store.dispatch(productoSeleccionado(null));
+  const state = store.getState();
+  sessionStorage.setItem("state", JSON.stringify(state));
+  return result;
 };
 
-export const generadorCodigoProductoMiddleware = (store) => (next) => (action) => {
-  if (action.type != ActionTypes.ProductoAgregado) {
-    return next(action);
-  }
-  action.payload = { ...action.payload, codigo };
-};
+export const agregarOModificarProductoMiddleware =
+  (store) => (next) => (action) => {
+    if (action.type != ActionTypes.ProductoAgregadoOModificado) {
+      return next(action);
+    }
+    const producto = action.payload;
+
+    const actionToDispatch = producto.codigo
+      ? productoModificado(producto)
+      : productoAgregado(producto);
+    store.dispatch(actionToDispatch);
+    return store.dispatch(productoSeleccionado(null));
+  };
+
+export const generadorCodigoProductoMiddleware =
+  (store) => (next) => (action) => {
+    if (action.type != ActionTypes.ProductoAgregado) {
+      return next(action);
+    }
+    action.payload = { ...action.payload, codigo };
+  };
 
 function productoSeleccionadoReducer(state, action) {
   const codigo = action.payload.codigo;
@@ -123,7 +140,7 @@ function productoModificadoReducer(state, action) {
   };
 }
 
-function productoAgregadoReducer(state,action) {
+function productoAgregadoReducer(state, action) {
   const producto = action.payload;
   const total = producto.cantidad * producto.precio;
   return {
@@ -155,4 +172,3 @@ export function generadorCodigoProductoBuilder(codigoInicial) {
     return next(actionToDispatch);
   };
 }
-
