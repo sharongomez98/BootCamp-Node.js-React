@@ -4,26 +4,43 @@ const ActionTypes = {
   ProductoEliminado: "producto-eliminado",
   ProductoSeleccionado: "producto-selecionado",
   ProductoAgregadoOModificado: "producto-agregado-o-modificado",
+  AsignarProductos: "asignar-productos",
 };
 
-export const reducer = (state, action) => {
+export const producto = (state = {}, action) => {
   switch (action.type) {
-    case ActionTypes.ProductoAgregado:
-      return productoAgregadoReducer(state, action);
-
-    case ActionTypes.ProductoModificado:
-      return productoModificadoReducer(state, action);
-
-    case ActionTypes.ProductoEliminado:
-      return productoEliminadoReducer(state, action);
-
     case ActionTypes.ProductoSeleccionado:
-      return productoSeleccionadoReducer(state, action);
-
+      return action.payload
     default:
       return state;
   }
-};
+}
+
+export const productos = (state = {}, action) => {
+  switch (action.type) {
+    case ActionTypes.AsignarProductos:
+      return action.payload
+    default:
+      return state;
+  }
+}
+
+// export const reducer = (state, action) => {
+//   switch (action.type) {
+//     case ActionTypes.ProductoSeleccionado:
+//       return {
+//         ... state,
+//         producto:action.payload
+//       }
+//     case ActionTypes.AsignarProductos:
+//       return {
+//         ... state,
+//         productos: action.payload
+//       };
+//     default:
+//       return state;
+//   }
+// };
 
 export const productoSeleccionado = (codigo) => ({
   type: ActionTypes.ProductoSeleccionado,
@@ -49,21 +66,6 @@ export const agregarOModificarProducto = (payload) => ({
   type: ActionTypes.ProductoAgregadoOModificado,
   payload,
 });
-
-//long version of log middleware
-
-// function loggerMiddleware(store) {
-//   return function dispatchWrapper(next) {
-//     return function actionHandler(action) {
-//       const state = store.getState();
-//       console.log("dispatching", action);
-//       console.log("state", state);
-
-//     }
-//   }
-// }
-
-//short version of log middleware
 
 export const loggerMiddleware = (store) => (next) => (action) => {
   console.log("dispatching", action);
@@ -114,44 +116,6 @@ function productoSeleccionadoReducer(state, action) {
   return {
     ...state,
     producto: state.productos.find((item) => item.codigo == codigo) || {},
-  };
-}
-
-function productoEliminadoReducer(state, action) {
-  const codigo = action.payload.codigo;
-  const productos = state.productos.filter((item) => item.codigo != codigo);
-  return {
-    ...state,
-    productos,
-  };
-}
-
-function productoModificadoReducer(state, action) {
-  const producto = action.payload;
-  const productos = state.productos.slice();
-  const codigo = producto.codigo;
-  const total = producto.cantidad * producto.precio;
-  const old = productos.find((item) => item.codigo == codigo);
-  const index = productos.indexOf(old);
-  productos[index] = { ...producto, total };
-  return {
-    ...state,
-    productos,
-  };
-}
-
-function productoAgregadoReducer(state, action) {
-  const producto = action.payload;
-  const total = producto.cantidad * producto.precio;
-  return {
-    ...state,
-    productos: [
-      ...state.productos,
-      {
-        ...producto,
-        total,
-      },
-    ],
   };
 }
 

@@ -1,0 +1,36 @@
+### Home
+GET http://localhost:5001/
+
+### GET Productos
+GET http://localhost:5001/productos
+
+### GET Productos con filtro
+GET http://localhost:5001/productos?filtro=uc
+
+### GET Productos/{id}
+GET http://localhost:5001/productos/1
+
+### POST Productos
+POST http://localhost:5001/productos 
+Content-Type: application/json
+
+{
+    "nombre": "producto B",
+    "cantidad": 3,
+    "precio": 4
+}
+
+### PUT Productos
+PUT http://localhost:5001/productos/3 
+Content-Type: application/json
+
+{
+    "nombre": "aspirina v2",
+    "cantidad": 11,
+    "precio": 111,
+    "categoria": 2
+}
+
+### DELETE Productos
+DELETE http://localhost:5001/productos/3 
+Content-Type: application/json
